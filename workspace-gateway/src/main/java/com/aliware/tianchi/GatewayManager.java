@@ -6,14 +6,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+public class GatewayManager {
 
-import org.apache.dubbo.rpc.Invoker;
-
-import com.aliware.tianchi.CustomerInfo;
-
-public class CustomerInfoManager {
-
-    public static final Map<String, CustomerInfo> LOAD_INFO = new ConcurrentHashMap<>();
+    public static final Map<String, ProviderLoadInfo> LOAD_INFO = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> AVAIL_MAP = new ConcurrentHashMap<>();
 
     /**
@@ -21,13 +16,13 @@ public class CustomerInfoManager {
      * @param invoker
      * @return
      */
-    public static CustomerInfo getServerLoadInfo(Invoker<?> invoker) {
+    public static ProviderLoadInfo getProviderLoadInfo(Invoker<?> invoker) {
 
         // 获取该provider服务器的ip
         String host = invoker.getUrl().getHost();
         // 根据该ip查看provider服务器当前的信息
-        CustomerInfo customerInfo = LOAD_INFO.get(host);
-        return customerInfo;
+        ProviderLoadInfo providerLoadInfo = LOAD_INFO.get(host);
+        return providerLoadInfo;
     }
 
     public static void updateInfo(String notiftStr) {
@@ -39,14 +34,14 @@ public class CustomerInfoManager {
         int activeCount = Integer.valueOf(severLoadArr[2]);
         int avgTime = Integer.valueOf(severLoadArr[3]);
         String key = "provider-" + quota;
-        CustomerInfo customerInfo = LOAD_INFO.get(key);
-        if (customerInfo == null) {
-            customerInfo = new CustomerInfo(quota, providerThread);
-            LOAD_INFO.put(key, customerInfo);
+        ProviderLoadInfo providerLoadInfo = LOAD_INFO.get(key);
+        if (providerLoadInfo == null) {
+            providerLoadInfo = new ProviderLoadInfo(quota, providerThread);
+            LOAD_INFO.put(key, providerLoadInfo);
         }
-        customerInfo.getAllActiveCount().set(activeCount);
-        int availCount = customerInfo.getProviderAllThreads() - activeCount;
-        customerInfo.setAvgSpendTime(avgTime);
+        providerLoadInfo.getTotalActiveThreadNum().set(activeCount);
+        int availCount = providerLoadInfo.getProviderAllThreads() - activeCount;
+        providerLoadInfo.setAvgSpendTime(avgTime);
 
         AtomicInteger avail = AVAIL_MAP.get(key);
         if (avail == null) {

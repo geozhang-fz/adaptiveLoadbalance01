@@ -45,19 +45,19 @@ public class CallbackServiceImpl implements CallbackService {
     }
 
     private String getInfo() {
-        CustomerInfo customerInfo = ProviderManager.getServerInfo();
+        ProviderLoadInfo providerLoadInfo = ProviderManager.getServerInfo();
         Optional<ProtocolConfig> protocolConfig = ConfigManager.getInstance().getProtocol(Constants.DUBBO_PROTOCOL);
-        String env = System.getProperty("quota");
+        String quota = System.getProperty("quota");
         int providerThread = protocolConfig.get().getThreads();
-        long allSpendTimeTotal = customerInfo.getAllSpendTimeTotal().get();
-        long allReqCount = customerInfo.getAllReqCount().get();
+        long allSpendTimeTotal = providerLoadInfo.getTotalTimeSpent().get();
+        long allReqCount = providerLoadInfo.getTotalReqCount().get();
         long allAvgTime = 0;
-        long allActiveCount = customerInfo.getAllActiveCount().get();
+        long allActiveCount = providerLoadInfo.getTotalActiveThreadNum().get();
         if (allReqCount != 0) {
             allAvgTime = allSpendTimeTotal / allReqCount;
         }
         StringBuilder info = new StringBuilder();
-        info.append(env).append(",").append(providerThread).append(",").append(allActiveCount).append(",").append(allAvgTime).append(",").append(allReqCount);
+        info.append(quota).append(",").append(providerThread).append(",").append(allActiveCount).append(",").append(allAvgTime).append(",").append(allReqCount);
 
         return info.toString();
     }

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TestClientFilter implements Filter {
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        AtomicInteger availThread = CustomerInfoManager.getAvailThread(invoker);
+        AtomicInteger availThread = GatewayManager.getAvailThread(invoker);
         if (availThread == null) {
             return invoker.invoke(invocation);
         }
