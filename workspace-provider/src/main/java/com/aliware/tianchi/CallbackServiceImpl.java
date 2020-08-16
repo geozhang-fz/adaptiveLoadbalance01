@@ -29,10 +29,40 @@ public class CallbackServiceImpl implements CallbackService {
             @Override
             public void run() {
                 if (!listeners.isEmpty()) {
+                    /* 获取各指标 */
+                    // 获取provider的等级
+                    String quota = providerManager.getQuota();
+                    // 获取线程池大小
+                    long providerThreadNum = providerManager.getProviderThreadNum();
+                    // 获取当前活跃的线程数
+                    long activeThreadNum = providerManager.getActiveThreadNum();
+                    // 计算可用线程数
+                    long availThreadNum = providerThreadNum - activeThreadNum;
+                    // 获取该发送消息周期内，provider收到的请求数
+                    long reqCount = providerManager.getReqCount();
+                    // 获取该发送消息周期内，调用invoke方法的总处理时间
+                    long timeSpent = providerManager.getTimeSpent();
+                    // 计算该发送消息周期内，每份请求的平均处理时间
+                    long avgTimeEachReq = 0;
+                    if (reqCount != 0) {
+                        avgTimeEachReq = timeSpent / reqCount;
+                    }
+
                     for (Map.Entry<String, CallbackListener> entry : listeners.entrySet()) {
                         try {
+                            /* 生成消息 */
+                            String msg = String.format(
+                                "%s,%s,%s",
+                                quota, availThreadNum, avgTimeEachReq
+                            );
 
-                            entry.getValue().receiveServerMsg(getMsg());
+                            entry.getValue().receiveServerMsg(msg);
+
+                            /* 打印当前状态 */
+                            System.out.println(String.format(
+                                "%s级的provider，线程池大小：%s，活跃线程数：%s，请求数量：%s，每份请求的平均处理时间：%sms",
+                                quota, providerThreadNum, activeThreadNum, reqCount, avgTimeEachReq
+                            ));
 
                         } catch (Throwable t1) {
                             listeners.remove(entry.getKey());
@@ -41,51 +71,13 @@ public class CallbackServiceImpl implements CallbackService {
                     providerManager.reset();
                 }
             }
-        }, 0, 5000);
+        }, 0, 1000);
     }
 
-    /**
-     * 生成发往Gateway服务器的消息
-     * @return
-     */
-    private String getMsg() {
-        /* 获取各指标 */
-        // 获取provider的等级
-        String quota = providerManager.getQuota();
-        // 获取线程池大小
-        long providerThreadNum = providerManager.getProviderThreadNum();
-        // 获取当前活跃的线程数
-        long activeThreadNum = providerManager.getActiveThreadNum();
-        // 计算可用线程数
-        long availThreadNum = providerThreadNum - activeThreadNum;
-        // 获取该发送消息周期内，provider收到的请求数
-        long reqCount = providerManager.getReqCount();
-        // 获取该发送消息周期内，调用invoke方法的总处理时间
-        long timeSpent = providerManager.getTimeSpent();
-        // 计算该发送消息周期内，每份请求的平均处理时间
-        long avgTimeEachReq = 0;
-        if (reqCount != 0) {
-            avgTimeEachReq = timeSpent / reqCount;
-        }
-
-        /* 生成消息 */
-        String msg = String.format(
-            "%s,%s,%s",
-            quota, availThreadNum, avgTimeEachReq
-        );
-
-        /* 打印当前状态 */
-        System.out.println(String.format(
-            "%s级的provider，线程池大小：%s，活跃线程数：%s，每份请求的平均处理时间：%s",
-            quota, providerThreadNum, activeThreadNum, avgTimeEachReq
-        ));
-
-        return msg;
-    }
 
     @Override
     public void addListener(String key, CallbackListener listener) {
         listeners.put(key, listener);
-        listener.receiveServerMsg(new Date().toString()); // send notification for change
+//        listener.receiveServerMsg(getMsg()); // send notification for change
     }
 }

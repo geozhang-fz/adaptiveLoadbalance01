@@ -1,10 +1,6 @@
 package com.aliware.tianchi;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Context {
 
@@ -14,16 +10,6 @@ public class Context {
 
         return instance;
 
-    }
-
-
-
-    enum Provider {
-        // Provider的name
-        S,
-        M,
-        L,
-        ;
     }
 
     private static final int INVOKERS_SIZE = 3;
@@ -38,12 +24,13 @@ public class Context {
     public static final Boolean[] AVAIL_ARR = new Boolean[INVOKERS_SIZE];
 
     // quota到index的转换
-    public static final Map<String, Integer> QUOTA_TO_INDEX = new ConcurrentHashMap<>();
+    public static Map<String, Integer> QUOTA_TO_INDEX = Map.of(
+            "small", 0,
+            "medium", 1,
+            "large", 2
+    );
 
     static {
-        QUOTA_TO_INDEX.put("small", 0);
-        QUOTA_TO_INDEX.put("medium", 1);
-        QUOTA_TO_INDEX.put("large", 2);
 
         WEIGHT_ARR[0] = 100;
         WEIGHT_ARR[1] = 400;

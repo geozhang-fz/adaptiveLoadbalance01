@@ -9,8 +9,6 @@ import org.apache.dubbo.rpc.listener.CallbackListener;
  */
 public class CallbackListenerImpl implements CallbackListener {
 
-    private static Context context = Context.getInstance();
-
     /**
      * provider服务器端的CallbackServiceImpl调用，请求Gateway服务器端接收消息
      * @param msg
@@ -23,22 +21,30 @@ public class CallbackListenerImpl implements CallbackListener {
         String[] msgs = msg.split(",");
 
         String quota = msgs[0];
-        int index = context.QUOTA_TO_INDEX.get(quota);
+        int index = Context.QUOTA_TO_INDEX.get(quota);
 
         /* 更新provider是否存在可用线程(Boolean) */
         int availThreadNum = Integer.valueOf(msgs[1]);
         boolean isAvailable = availThreadNum > 0 ? true : false;
-        context.AVAIL_ARR[index] = isAvailable;
+        Context.AVAIL_ARR[index] = isAvailable;
 
         int avgTimeEachReq = Integer.valueOf(msgs[2]);
 
         /* 更新动态权重 */
-        context.CUR_WEIGHT_ARR[index] *= (500 / avgTimeEachReq);
+        int updateIdx = 1;
+        if (avgTimeEachReq != 0) {
+            updateIdx = 500 / avgTimeEachReq;
+            // 限制动态权重的倍数
+            // 下界缩8倍，上界扩5倍
+//            if (0.125 <= updateIdx || updateIdx <= 8) {
+            Context.CUR_WEIGHT_ARR[index] *= updateIdx;
+//            }
+        }
 
         /* 打印消息 */
         System.out.println(String.format(
-                "%s级的provider，是否存在可用线程：%s",
-                quota, isAvailable
+            "%s级的provider，是否存在可用线程：%s，动态权重缩放：%s倍",
+            quota, isAvailable, updateIdx
         ));
     }
 
