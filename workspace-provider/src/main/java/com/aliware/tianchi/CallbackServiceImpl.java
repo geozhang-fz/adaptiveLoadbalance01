@@ -1,8 +1,5 @@
 package com.aliware.tianchi;
 
-import org.apache.dubbo.common.Constants;
-import org.apache.dubbo.config.ProtocolConfig;
-import org.apache.dubbo.config.context.ConfigManager;
 import org.apache.dubbo.rpc.listener.CallbackListener;
 import org.apache.dubbo.rpc.service.CallbackService;
 
@@ -10,9 +7,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 服务端回调服务
- * 可选接口
- * 用户可以基于此服务，实现服务端向客户端动态推送的功能
+ * 该类实现provider服务器端向Gateway服务器端动态推送消息
+ * provider服务器接收Gateway服务器 CallbackListener 的注册，并执行消息推送
+ * provider服务器每 5 秒向Gateway服务器端推送消息
+ * （可选接口）
  */
 public class CallbackServiceImpl implements CallbackService {
 
@@ -34,7 +32,7 @@ public class CallbackServiceImpl implements CallbackService {
                     for (Map.Entry<String, CallbackListener> entry : listeners.entrySet()) {
                         try {
 
-                            entry.getValue().receiveServerMsg(getInfo());
+                            entry.getValue().receiveServerMsg(getMsg());
 
                         } catch (Throwable t1) {
                             listeners.remove(entry.getKey());
@@ -43,30 +41,46 @@ public class CallbackServiceImpl implements CallbackService {
                     providerManager.reset();
                 }
             }
-        }, 0, 1000);
+        }, 0, 5000);
     }
 
-    private String getInfo() {
-
+    /**
+     * 生成发往Gateway服务器的消息
+     * @return
+     */
+    private String getMsg() {
+        /* 获取各指标 */
         // 获取provider的等级
         String quota = providerManager.getQuota();
         // 获取线程池大小
         long providerThreadNum = providerManager.getProviderThreadNum();
         // 获取当前活跃的线程数
         long activeThreadNum = providerManager.getActiveThreadNum();
-        long totalTimeSpent = providerManager.getTotalTimeSpent();
-        long totalReqCount = providerManager.getTotalReqCount();
-        long totalAvgTime = 0;
-        if (totalReqCount != 0) {
-            totalAvgTime = totalTimeSpent / totalReqCount;
+        // 计算可用线程数
+        long availThreadNum = providerThreadNum - activeThreadNum;
+        // 获取该发送消息周期内，provider收到的请求数
+        long reqCount = providerManager.getReqCount();
+        // 获取该发送消息周期内，调用invoke方法的总处理时间
+        long timeSpent = providerManager.getTimeSpent();
+        // 计算该发送消息周期内，每份请求的平均处理时间
+        long avgTimeEachReq = 0;
+        if (reqCount != 0) {
+            avgTimeEachReq = timeSpent / reqCount;
         }
 
-        String notifyStr = String.format(
-                "%s,%s,%s,%s,%s",
-                quota, providerThreadNum, activeThreadNum, totalAvgTime, totalReqCount
+        /* 生成消息 */
+        String msg = String.format(
+            "%s,%s,%s",
+            quota, availThreadNum, avgTimeEachReq
         );
 
-        return notifyStr;
+        /* 打印当前状态 */
+        System.out.println(String.format(
+            "%s级的provider，线程池大小：%s，活跃线程数：%s，每份请求的平均处理时间：%s",
+            quota, providerThreadNum, activeThreadNum, avgTimeEachReq
+        ));
+
+        return msg;
     }
 
     @Override

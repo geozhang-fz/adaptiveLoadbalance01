@@ -5,12 +5,10 @@ import org.apache.dubbo.config.ProtocolConfig;
 import org.apache.dubbo.config.context.ConfigManager;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ProviderManager {
 
     /* Data */
-    private static ProviderManager instance = new ProviderManager();
 
     private String quota = System.getProperty("quota");
 
@@ -21,20 +19,24 @@ public class ProviderManager {
     // 当前活跃线程数
     private volatile long activeThreadNum = 0;
 
-    private volatile long totalReqCount = 0;
+    // 每个发送消息的周期内，provider收到的请求数
+    private volatile long reqCount = 0;
 
-    private volatile long totalTimeSpent = 0;
+    // 每个发送消息的周期内，调用invoke方法的总处理时间
+    private volatile long timeSpent = 0;
 
-
-    /* Getter */
-    private final Object lockATN = new Object();
-    private final Object lockTRC = new Object();
-    private final Object lockTTS = new Object();
-
+    /* Constructor */
+    private static ProviderManager instance = new ProviderManager();
 
     public static ProviderManager getInstance() {
         return instance;
     }
+
+
+    /* Getter */
+    private final Object lockATN = new Object();
+    private final Object lockRC = new Object();
+    private final Object lockTS = new Object();
 
     public String getQuota() {
         return quota;
@@ -48,19 +50,19 @@ public class ProviderManager {
         return activeThreadNum;
     }
 
-    public long getTotalReqCount() {
-        return totalReqCount;
+    public long getReqCount() {
+        return reqCount;
     }
 
-    public long getTotalTimeSpent() {
-        return totalTimeSpent;
+    public long getTimeSpent() {
+        return timeSpent;
     }
 
 
     /* Common Methods */
     public void incrementTotalReqCount() {
-        synchronized (lockTRC) {
-            this.totalReqCount++;
+        synchronized (lockRC) {
+            this.reqCount++;
         }
     }
 
@@ -77,19 +79,19 @@ public class ProviderManager {
     }
 
     public void addTotalTimeSpent(long timeSpent) {
-        synchronized (lockTTS) {
-            this.totalTimeSpent += timeSpent;
+        synchronized (lockTS) {
+            this.timeSpent += timeSpent;
         }
     }
 
 
     /* Methods */
     public void reset() {
-        synchronized (lockTRC) {
-            totalReqCount = 0;
+        synchronized (lockRC) {
+            reqCount = 0;
         }
-        synchronized (lockTTS) {
-            totalTimeSpent = 0;
+        synchronized (lockTS) {
+            timeSpent = 0;
         }
     }
 
