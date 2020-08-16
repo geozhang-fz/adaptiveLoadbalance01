@@ -10,8 +10,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author daofeng.xjf
- * <p>
  * 服务端回调服务
  * 可选接口
  * 用户可以基于此服务，实现服务端向客户端动态推送的功能
@@ -33,7 +31,9 @@ public class CallbackServiceImpl implements CallbackService {
                 if (!listeners.isEmpty()) {
                     for (Map.Entry<String, CallbackListener> entry : listeners.entrySet()) {
                         try {
+
                             entry.getValue().receiveServerMsg(getInfo());
+
                         } catch (Throwable t1) {
                             listeners.remove(entry.getKey());
                         }
@@ -47,19 +47,26 @@ public class CallbackServiceImpl implements CallbackService {
     private String getInfo() {
         ProviderLoadInfo providerLoadInfo = ProviderManager.getServerInfo();
         Optional<ProtocolConfig> protocolConfig = ConfigManager.getInstance().getProtocol(Constants.DUBBO_PROTOCOL);
+
+        // 获取provider的等级
         String quota = System.getProperty("quota");
-        int providerThread = protocolConfig.get().getThreads();
+        // 获取线程池大小
+        long providerThread = protocolConfig.get().getThreads();
+        // 获取当前活跃的线程数
+        long allActiveCount = providerLoadInfo.getTotalActiveThreadNum().get();
         long allSpendTimeTotal = providerLoadInfo.getTotalTimeSpent().get();
         long allReqCount = providerLoadInfo.getTotalReqCount().get();
         long allAvgTime = 0;
-        long allActiveCount = providerLoadInfo.getTotalActiveThreadNum().get();
         if (allReqCount != 0) {
             allAvgTime = allSpendTimeTotal / allReqCount;
         }
-        StringBuilder info = new StringBuilder();
-        info.append(quota).append(",").append(providerThread).append(",").append(allActiveCount).append(",").append(allAvgTime).append(",").append(allReqCount);
 
-        return info.toString();
+        String notifyStr = String.format(
+                "%s,%s,%s,%s,%s,",
+                quota, providerThread, allActiveCount, allAvgTime, allReqCount
+        );
+
+        return notifyStr;
     }
 
     @Override
