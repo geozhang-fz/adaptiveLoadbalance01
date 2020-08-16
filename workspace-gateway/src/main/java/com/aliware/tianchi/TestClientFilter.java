@@ -4,8 +4,6 @@ import org.apache.dubbo.common.Constants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.*;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * @author daofeng.xjf
  *
@@ -15,21 +13,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Activate(group = Constants.CONSUMER)
 public class TestClientFilter implements Filter {
+
+    private static Context context = Context.getInstance();
+
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-        AtomicInteger availThread = GatewayManager.getAvailThread(invoker);
-        if (availThread == null) {
-            return invoker.invoke(invocation);
+        try {
+//      System.out.println("每次消息都调用我");
+            Result result = invoker.invoke(invocation);
+
+            return result;
+        } catch (Exception e) {
+            throw e;
         }
-        availThread.decrementAndGet();
-        Result result = invoker.invoke(invocation);
-        if (result instanceof AsyncRpcResult) {
-            AsyncRpcResult asyncResult = (AsyncRpcResult) result;
-            asyncResult.getResultFuture().whenComplete((actual, t) -> {
-                availThread.incrementAndGet();
-            });
-        }
-        return result;
 
     }
 

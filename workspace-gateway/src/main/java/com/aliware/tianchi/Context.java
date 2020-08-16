@@ -1,7 +1,5 @@
 package com.aliware.tianchi;
 
-import java.util.Map;
-
 public class Context {
 
     private static Context instance = new Context();
@@ -24,11 +22,11 @@ public class Context {
     public static final Boolean[] AVAIL_ARR = new Boolean[INVOKERS_SIZE];
 
     // quota到index的转换
-    public static Map<String, Integer> QUOTA_TO_INDEX = Map.of(
-            "small", 0,
-            "medium", 1,
-            "large", 2
-    );
+//    public static Map<String, Integer> QUOTA_TO_INDEX = Map.of(
+//            "small", 0,
+//            "medium", 1,
+//            "large", 2
+//    );
 
     static {
 
@@ -36,8 +34,12 @@ public class Context {
         WEIGHT_ARR[1] = 400;
         WEIGHT_ARR[2] = 700;
 
-        CUR_WEIGHT_ARR[0] = 500;
-        CUR_WEIGHT_ARR[1] = 500;
-        CUR_WEIGHT_ARR[2] = 500;
+        CUR_WEIGHT_ARR[0] = 200;
+        CUR_WEIGHT_ARR[1] = 200;
+        CUR_WEIGHT_ARR[2] = 200;
+
+        for (int i = 0; i < INVOKERS_SIZE; i++) {
+            AVAIL_ARR[i] = true;
+        }
     }
 }

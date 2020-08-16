@@ -8,7 +8,6 @@ import org.apache.dubbo.rpc.cluster.LoadBalance;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 负载均衡扩展接口
@@ -26,30 +25,6 @@ public class UserLoadBalance implements LoadBalance {
         return dynamicRandomWeight02(invokers);
     }
 
-
-    /**
-     * 落实优先每个机器都有流量请求
-     */
-    private <T> Invoker<T> doSelectInFreeInvokers(List<Invoker<T>> invokers) {
-
-        // 只要LOAD_INFO未满额，就表示还有provider没访问过
-        if (GatewayManager.LOAD_INFO.size() < invokers.size()) {
-            for (int i = 0; i < invokers.size(); i++) {
-
-            }
-            for (Invoker invoker : invokers) {
-
-                ProviderLoadInfo providerLoadInfo = GatewayManager.getProviderLoadInfo(invoker);
-
-                if (providerLoadInfo != null) break;
-
-                // 若customerInfo为空，表示该provider还没访问过，遂选该provider
-                return invoker;
-            }
-        }
-
-        return null;
-    }
 
     /**
      * 根据服务端配置和平均耗时计算权重
