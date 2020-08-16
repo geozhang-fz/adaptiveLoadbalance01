@@ -3,7 +3,11 @@ package com.aliware.tianchi;
 import org.apache.dubbo.rpc.listener.CallbackListener;
 import org.apache.dubbo.rpc.service.CallbackService;
 
-import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -48,6 +52,10 @@ public class CallbackServiceImpl implements CallbackService {
                         avgTimeEachReq = timeSpent / reqCount;
                     }
 
+                    Date now = new Date();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String nowStr = sdf.format(now);
+
                     for (Map.Entry<String, CallbackListener> entry : listeners.entrySet()) {
                         try {
                             /* 生成消息 */
@@ -60,8 +68,8 @@ public class CallbackServiceImpl implements CallbackService {
 
                             /* 打印当前状态 */
                             System.out.println(String.format(
-                                "%s级的provider，线程池大小：%s，活跃线程数：%s，请求数量：%s，每份请求的平均处理时间：%sms",
-                                quota, providerThreadNum, activeThreadNum, reqCount, avgTimeEachReq
+                                "【时间:%s】%s级的provider，线程池大小：%s，活跃线程数：%s，请求数量：%s，每份请求的平均处理时间：%sms",
+                                    nowStr, quota, providerThreadNum, activeThreadNum, reqCount, avgTimeEachReq
                             ));
 
                         } catch (Throwable t1) {
