@@ -17,19 +17,22 @@ import org.apache.dubbo.rpc.RpcException;
  */
 @Activate(group = Constants.PROVIDER)
 public class TestServerFilter implements Filter {
+
+    private ProviderManager providerManager = ProviderManager.getInstance();
+
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         boolean isSuccess = false;
-        long begin = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         try {
-            ProviderManager.startTime();
+            providerManager.beforeInvoker();
             Result result = invoker.invoke(invocation);
             isSuccess = true;
             return result;
         } catch (Exception e) {
             throw e;
         } finally {
-            ProviderManager.endTime(System.currentTimeMillis() - begin, isSuccess);
+            providerManager.afterInvoker(System.currentTimeMillis() - startTime, isSuccess);
         }
 
     }

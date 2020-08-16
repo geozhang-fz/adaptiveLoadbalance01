@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CallbackServiceImpl implements CallbackService {
 
+    private ProviderManager providerManager = ProviderManager.getInstance();
+
     private Timer timer = new Timer();
 
     /**
@@ -38,32 +40,30 @@ public class CallbackServiceImpl implements CallbackService {
                             listeners.remove(entry.getKey());
                         }
                     }
-                    ProviderManager.resetTime();
+                    providerManager.reset();
                 }
             }
         }, 0, 1000);
     }
 
     private String getInfo() {
-        ProviderLoadInfo providerLoadInfo = ProviderManager.getServerInfo();
-        Optional<ProtocolConfig> protocolConfig = ConfigManager.getInstance().getProtocol(Constants.DUBBO_PROTOCOL);
 
         // 获取provider的等级
-        String quota = System.getProperty("quota");
+        String quota = providerManager.getQuota();
         // 获取线程池大小
-        long providerThread = protocolConfig.get().getThreads();
+        long providerThreadNum = providerManager.getProviderThreadNum();
         // 获取当前活跃的线程数
-        long allActiveCount = providerLoadInfo.getTotalActiveThreadNum().get();
-        long allSpendTimeTotal = providerLoadInfo.getTotalTimeSpent().get();
-        long allReqCount = providerLoadInfo.getTotalReqCount().get();
-        long allAvgTime = 0;
-        if (allReqCount != 0) {
-            allAvgTime = allSpendTimeTotal / allReqCount;
+        long activeThreadNum = providerManager.getActiveThreadNum();
+        long totalTimeSpent = providerManager.getTotalTimeSpent();
+        long totalReqCount = providerManager.getTotalReqCount();
+        long totalAvgTime = 0;
+        if (totalReqCount != 0) {
+            totalAvgTime = totalTimeSpent / totalReqCount;
         }
 
         String notifyStr = String.format(
-                "%s,%s,%s,%s,%s,",
-                quota, providerThread, allActiveCount, allAvgTime, allReqCount
+                "%s,%s,%s,%s,%s",
+                quota, providerThreadNum, activeThreadNum, totalAvgTime, totalReqCount
         );
 
         return notifyStr;
