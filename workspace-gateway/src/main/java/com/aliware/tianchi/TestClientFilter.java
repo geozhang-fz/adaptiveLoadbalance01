@@ -5,9 +5,7 @@ import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.*;
 
 /**
- * @author daofeng.xjf
- *
- * 客户端过滤器
+ * Gateway服务器过滤器
  * 可选接口
  * 用户可以在客户端拦截请求和响应,捕获 rpc 调用时产生、服务端返回的已知异常。
  */

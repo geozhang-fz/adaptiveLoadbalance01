@@ -15,48 +15,23 @@ public class CallbackListenerImpl implements CallbackListener {
      */
     @Override
     public void receiveServerMsg(String msg) {
-
 //        System.out.println("receive msg from server :" + msg);
 
+        /* 处理推送消息 */
         String[] msgs = msg.split(",");
 
         String quota = msgs[0];
-        int index;
-        if (quota.equals("small")) {
-            index = 0;
-        } else if (quota.equals("medium")) {
-            index = 1;
-        } else {
-            index = 2;
-        }
+        int code = Context.mapQuotaToCode(quota);
 
-        /* 更新provider是否存在可用线程(Boolean) */
+        // 更新provider是否存在可用线程(Boolean)
         int availThreadNum = Integer.valueOf(msgs[1]);
         boolean isAvailable = availThreadNum > 0 ? true : false;
-        Context.AVAIL_ARR[index] = isAvailable;
+        Context.AVAIL_ARR[code] = isAvailable;
 
         double avgTimeEachReq = Integer.valueOf(msgs[2]);
 
         /* 更新动态权重 */
-        double updateIdx = 1;
-        int upperBoundry = 800;
-        int lowerBoundry = 100;
-        if (avgTimeEachReq != 0) {
-            updateIdx = 500 / avgTimeEachReq;
-            double curWeight = Context.CUR_WEIGHT_ARR[index];
-            if (lowerBoundry <= curWeight && curWeight <= upperBoundry) {
-                // 限制动态权重的倍数
-                // 下界缩8倍，上界扩5倍
-                if (0.125 <= updateIdx && updateIdx <= 8) {
-                    curWeight *= updateIdx;
-                    Context.CUR_WEIGHT_ARR[index] = (int) curWeight;
-                }
-            } else if (curWeight < lowerBoundry) {
-                Context.CUR_WEIGHT_ARR[index] = lowerBoundry;
-            } else if (upperBoundry < curWeight) {
-                Context.CUR_WEIGHT_ARR[index] = upperBoundry;
-            }
-        }
+        double updateIdx = Context.updateCurWeight(avgTimeEachReq, code);
 
         /* 打印消息 */
         System.out.println(String.format(
@@ -64,5 +39,4 @@ public class CallbackListenerImpl implements CallbackListener {
             quota, isAvailable, (int) updateIdx
         ));
     }
-
 }

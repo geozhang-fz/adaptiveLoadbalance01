@@ -42,4 +42,39 @@ public class Context {
             AVAIL_ARR[i] = true;
         }
     }
+
+    public static int mapQuotaToCode(String quota) {
+        int index;
+        if (quota.equals("small")) {
+            index = 0;
+        } else if (quota.equals("medium")) {
+            index = 1;
+        } else {
+            index = 2;
+        }
+        return index;
+    }
+
+    public static double updateCurWeight(double avgTimeEachReq, int providerCode) {
+        double updateIdx = 1;
+        int upperBoundry = 800;
+        int lowerBoundry = 100;
+        if (avgTimeEachReq != 0) {
+            updateIdx = 500 / avgTimeEachReq;
+            double curWeight = Context.CUR_WEIGHT_ARR[providerCode];
+            if (lowerBoundry <= curWeight && curWeight <= upperBoundry) {
+                // 限制动态权重的倍数
+                // 下界缩8倍，上界扩5倍
+                if (0.125 <= updateIdx && updateIdx <= 8) {
+                    curWeight *= updateIdx;
+                    Context.CUR_WEIGHT_ARR[providerCode] = (int) curWeight;
+                }
+            } else if (curWeight < lowerBoundry) {
+                Context.CUR_WEIGHT_ARR[providerCode] = lowerBoundry;
+            } else if (upperBoundry < curWeight) {
+                Context.CUR_WEIGHT_ARR[providerCode] = upperBoundry;
+            }
+        }
+        return updateIdx;
+    }
 }
