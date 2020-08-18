@@ -2,6 +2,9 @@ package com.aliware.tianchi;
 
 import org.apache.dubbo.rpc.listener.CallbackListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Gateway服务器端的监听器
  * 该类获取provider服务器端的推送信息，与 CallbackService 搭配使用
@@ -30,13 +33,18 @@ public class CallbackListenerImpl implements CallbackListener {
 
         double avgTimeEachReq = Integer.valueOf(msgs[2]);
 
+        // 获取时间
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String nowStr = sdf.format(now);
+
         /* 更新动态权重 */
         double updateIdx = Context.updateCurWeight(avgTimeEachReq, code);
 
         /* 打印消息 */
         System.out.println(String.format(
-            "%s级的provider，是否存在可用线程：%s，动态权重缩放：%s倍",
-            quota, isAvailable, (int) updateIdx
+            "【%s】%s级的provider，是否存在可用线程：%s，动态权重缩放：%s倍",
+            nowStr, quota, isAvailable, (int) updateIdx
         ));
     }
 }
