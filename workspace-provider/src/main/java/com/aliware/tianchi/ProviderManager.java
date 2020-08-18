@@ -25,9 +25,6 @@ public class ProviderManager {
     // 每个发送消息的周期内，调用invoke方法的总处理时间
     private volatile long timeSpent = 0;
 
-    private volatile int max = Integer.MAX_VALUE;
-
-
     /* Constructor */
     private static ProviderManager instance = new ProviderManager();
 
@@ -59,11 +56,6 @@ public class ProviderManager {
 
     public long getTimeSpent() {
         return timeSpent;
-    }
-
-    // 启动设置一次
-    public void setMax(int max) {
-        this.max = max;
     }
 
     /* Common Methods */
