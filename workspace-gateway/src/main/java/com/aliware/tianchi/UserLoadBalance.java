@@ -50,7 +50,7 @@ public class UserLoadBalance implements LoadBalance {
                 // 获取s、m、l当前的动态权重
                 curWeights[i] = context.CUR_WEIGHT_ARR[i];
 
-                totalWeight = totalWeight + weights[i] + curWeights[i];
+                totalWeight += weights[i] + curWeights[i];
             }
         }
 

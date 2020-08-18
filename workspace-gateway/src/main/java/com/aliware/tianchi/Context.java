@@ -30,9 +30,9 @@ public class Context {
 
     static {
 
-        WEIGHT_ARR[0] = 100;
-        WEIGHT_ARR[1] = 400;
-        WEIGHT_ARR[2] = 700;
+        WEIGHT_ARR[0] = 50;
+        WEIGHT_ARR[1] = 300;
+        WEIGHT_ARR[2] = 900;
 
         CUR_WEIGHT_ARR[0] = 200;
         CUR_WEIGHT_ARR[1] = 200;
@@ -60,12 +60,12 @@ public class Context {
         int upperBoundry = 800;
         int lowerBoundry = 100;
         if (avgTimeEachReq != 0) {
-            updateIdx = 500 / avgTimeEachReq;
+            double thresholdTime = 140;
+            updateIdx = thresholdTime / avgTimeEachReq;
             double curWeight = Context.CUR_WEIGHT_ARR[providerCode];
             if (lowerBoundry <= curWeight && curWeight <= upperBoundry) {
                 // 限制动态权重的倍数
-                // 下界缩8倍，上界扩5倍
-                if (0.125 <= updateIdx && updateIdx <= 8) {
+                if (0.125 <= updateIdx && updateIdx <= 10) {
                     curWeight *= updateIdx;
                     Context.CUR_WEIGHT_ARR[providerCode] = (int) curWeight;
                 }
